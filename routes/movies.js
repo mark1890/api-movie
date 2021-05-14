@@ -1,13 +1,22 @@
 const express = require('express')
-const { moviesMock } = require('../utils/mocks/movies')
+const MoviesService = require('../services/movies')
+const validationHandler = require('../utils/middleware/validationHandler')
+
+const { movieIdSchema,
+	updateMovieSchema,
+	 createMovieSchema
+} = require('../utils/schemas/movies')
 
 function moviesApi(app) {
 	const router = express.Router()
 	app.use('/api/movies', router)
+	
+	const moviesService = new MoviesService()
 
 	router.get('/', async function (req, res, next) {
+		const { tags } = req.query
 		try {
-			const movies = await Promise.resolve(moviesMock)
+			const movies = await moviesService.getMovies({ tags })
 			res.status(200).json({
 				data: movies,
 				message: 'Movies listed'
@@ -17,9 +26,10 @@ function moviesApi(app) {
 		}
 	})
 	
-	router.get('/:movieId', async function (req, res, next) {
+	router.get('/:movieId', validationHandler({ movieId: movieIdSchema}, 'params'), async function (req, res, next) {
+		const { movieId } = req.params
 		try {
-			const movies = await Promise.resolve(moviesMock[0])
+			const movies = await moviesService.getMovie({ movieId })
 			res.status(200).json({
 				data: movies,
 				message: 'Movie retrieved'
@@ -29,9 +39,10 @@ function moviesApi(app) {
 		}
 	})
 	
-	router.post('/', async function (req, res, next) {
+	router.post('/', validationHandler(createMovieSchema), async function (req, res, next) {
+		const { body: movie } = req
 		try {
-			const createMovieId = await Promise.resolve(moviesMock[0].id)
+			const createMovieId = await moviesService.createMovie({ movie })
 			res.status(201).json({
 				data: createMovieId,
 				message: 'Movie created'
@@ -41,9 +52,11 @@ function moviesApi(app) {
 		}
 	})
 	
-	router.put('/:movieId', async function (req, res, next) {
+	router.put('/:movieId', validationHandler({ movieId: movieIdSchema}, 'params'), validationHandler(updateMovieSchema), async function (req, res, next) {
+		const { movieId } = req.params
+		const { body: movie } = req
 		try {
-			const updatedMovieId = await Promise.resolve(moviesMock[0].id)
+			const updatedMovieId = await moviesService.updateMovie({ movieId, movie })
 			res.status(200).json({
 				data: updatedMovieId,
 				message: 'Movie updated'
@@ -52,10 +65,25 @@ function moviesApi(app) {
 			next(err)
 		}
 	})
-	
-	router.delete('/:movieId', async function (req, res, next) {
+
+	router.patch('/:movieId', async function (req, res, next) {
+		const { movieId } = req.params
+		const { body: movie } = req
 		try {
-			const deleteMovieId = await Promise.resolve(moviesMock[0].id)
+			const updatedMovieId = await moviesService.updateMovie({ movieId, movie })
+			res.status(200).json({
+				data: updatedMovieId,
+				message: 'PATCH: Movie updated'
+			})
+		} catch (err) {
+			next(err)
+		}
+	})
+	
+	router.delete('/:movieId', validationHandler({ movieId: movieIdSchema}, 'params'), async function (req, res, next) {
+		const { movieId } = req.params
+		try {
+			const deleteMovieId = await moviesService.deleteMovie({ movieId })
 			res.status(200).json({
 				data: deleteMovieId,
 				message: 'Movie deleted'
