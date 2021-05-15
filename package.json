@@ -6,7 +6,9 @@
   "scripts": {
     "test": "mocha utils/test/**/*.js --exit",
     "dev": "SET DEBUG=app:*&nodemon index",
-    "start": "SET NODE_ENV=production&&node index"
+    "start": "SET NODE_ENV=production&&node index",
+    "cover": "nyc npm run test",
+    "report": "nyc report --reporter=html && start coverage/index.html"
   },
   "keywords": [],
   "author": "Marco Mora <mmoracascante@gmail.com> (https://twitter.com/mmoracascante)",
@@ -24,9 +26,14 @@
     "eslint-plugin-prettier": "^3.4.0",
     "mocha": "^8.4.0",
     "nodemon": "^2.0.7",
+    "nyc": "^15.1.0",
     "prettier": "^2.3.0",
     "proxyquire": "^2.1.3",
     "sinon": "^10.0.0",
     "supertest": "^6.1.3"
+  },
+  "nyc": {
+    "all": true,
+    "include": ["routes", "services", "lib", "utils"]
   }
 }
